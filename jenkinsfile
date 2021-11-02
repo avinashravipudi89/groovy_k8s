@@ -1,0 +1,86 @@
+
+
+pipeline {
+  agent any
+  stages {
+    stage('apt update') {
+      steps {
+        // checkout scm
+        sh '''
+          apt-get update
+		  
+        '''
+      }
+    }
+    stage('install openssh') {
+      steps {
+        echo 'install openssh'
+		sh '''
+          apt-get install openssh-server
+		  
+        '''
+      }
+    }
+    stage('install Docker') {
+      steps {
+        sh '''
+           apt-get update 
+		   
+        '''
+      }
+	  steps{
+	  sh '''
+	  apt-get install -y docker.io
+	  '''
+	  
+	  }
+	  
+    }
+    stage('Install k8s') {
+      steps {
+        sh '''
+          apt-get update && apt-get install -y apt-transport-https curl
+        '''
+      }
+	  steps {
+	  sh '''
+	  curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
+	  '''
+	  }
+	  steps {
+	  sh '''
+	  cat <<EOF >/etc/apt/sources.list.d/kubernetes.list
+       deb http://apt.kubernetes.io/ kubernetes-xenial main
+       EOF
+	  '''
+	  
+	  }
+	  steps{
+	  sh '''
+	  apt-get install -y kubelet kubeadm kubectl 
+	  '''
+	  }
+	  
+	  steps{
+	  sh '''
+	  cat <<EOF >/etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+	  Environment=”cgroup-driver=systemd/cgroup-driver=cgroupfs”
+	  EOF
+	  '''
+	  }
+	  
+	  steps{
+	  sh '''
+	  kubeadm init --apiserver-advertise-address= $(node_ip) --pod-network-cidr=192.168.0.0/16
+	  '''
+	  }
+	  
+	  steps{
+	  sh '''
+	  
+	  '''
+	  }
+    }
+  }
+  
+}
